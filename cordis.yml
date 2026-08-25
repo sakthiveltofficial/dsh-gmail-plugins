@@ -1,0 +1,37 @@
+# @google-workspace/dsh-gmail — profile patch layer.
+#
+# This file is a HOST-PLANE composition patch (top-level YAML array of loader
+# patch entries, exactly like a profile's cordis.patch.yml). The Gmail plugin
+# publishes no services — it only consumes the host `tools` registry (and the
+# optional `timer` service for triggers) — so it needs no isolate realm and can
+# sit loose here: its tools register once process-wide and are visible to every
+# agent, exactly like `tool-fs` or `tool-jobs` in the shipped presets.
+#
+# To use inside an AGENT PRESET instead, copy the row under `config:` into your
+# preset's agent.cordis.yml (see examples/agent.cordis.yml).
+#
+# Secrets are env-var REFERENCES resolved per operation through ctx.credentials
+# (process env, provider store, .env) — never literal tokens. Literal config
+# values (clientId / clientSecret / refreshToken) are also supported for quick
+# setups; they take precedence over the references.
+
+- insert:
+    - id: gmail
+      name: '@google-workspace/dsh-gmail'
+      config:
+        # ── OAuth2 (refs resolve via ctx.credentials, then process.env) ──────
+        clientIdRef: GMAIL_CLIENT_ID
+        clientSecretRef: GMAIL_CLIENT_SECRET
+        refreshTokenRef: GMAIL_REFRESH_TOKEN
+        # ── optional literal overrides ──────────────────────────────────────
+        # clientId: ''
+        # clientSecret: ''
+        # refreshToken: ''
+        defaultUserId: me
+        timeoutMs: 30000
+        # ── triggers (off by default) ───────────────────────────────────────
+        enableReceivedTrigger: false
+        enableSentTrigger: false
+        triggerIntervalMinutes: 5
+        receivedQuery: 'in:inbox newer_than:1d'
+        sentQuery: 'in:sent newer_than:1d'
