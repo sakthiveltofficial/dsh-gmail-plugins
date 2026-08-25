@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-A complete, production-ready **Gmail plugin for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) (DSH)**, inspired by the [Composio Gmail app](https://composio.dev). It gives the agent typed, policy-aware access to Gmail over the official Gmail and People REST APIs — **61 model-facing tools** (send, search, draft, label, filter, thread, settings, contacts) and **2 polling triggers** — with automatic OAuth2 token management.
+A complete, production-ready **Gmail plugin for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) (DSH)**. It gives the agent typed, policy-aware access to Gmail over the official Gmail and People REST APIs — **61 model-facing tools** (send, search, draft, label, filter, thread, settings, contacts) and **2 polling triggers** — with automatic OAuth2 token management.
 
 > **Official ecosystem keyword:** this is a `dsh-plugin` — add the `dsh-plugin` GitHub topic to this repository.
 
@@ -134,7 +134,7 @@ Access tokens are minted from the refresh token on demand and cached for their l
 
 ## 🧰 Tools
 
-All tool names are snake_case `gmail_*`, mapping 1:1 to the Composio slugs (`GMAIL_SEND_EMAIL → gmail_send_email`). The full parameter surface follows the Composio docs, including the important warnings (hexadecimal message IDs, label IDs vs display names, irreversible deletes).
+All tool names are snake_case `gmail_*` (e.g. `gmail_send_email`, `gmail_fetch_emails`), with the full parameter surface and the important warnings preserved: hexadecimal message IDs, label IDs vs display names, irreversible deletes.
 
 | Area | Tools |
 | --- | --- |
@@ -146,7 +146,7 @@ All tool names are snake_case `gmail_*`, mapping 1:1 to the Composio slugs (`GMA
 | Admin | `gmail_get_profile`, `gmail_list_history`, `gmail_get_imap_settings`, `gmail_update_imap_settings`, `gmail_get_pop_settings`, `gmail_update_pop_settings`, `gmail_get_auto_forwarding`, `gmail_list_forwarding_addresses`, `gmail_get_vacation_settings`, `gmail_update_vacation_settings`, `gmail_get_language_settings`, `gmail_update_language_settings`, `gmail_list_send_as`, `gmail_get_send_as`, `gmail_patch_send_as`, `gmail_update_send_as`, `gmail_list_smime_info`, `gmail_list_cse_identities`, `gmail_list_cse_keypairs`, `gmail_stop_watch` |
 | Contacts | `gmail_get_contacts`, `gmail_get_people`, `gmail_search_people` |
 
-> The two Composio tools that were **not** Gmail (`GMAIL_CREATE_PROMPT_POST` and `GMAIL_UPDATE_USER_ATTRIBUTES_VALUES`, which target the Sanity Content Agent) are intentionally omitted.
+> Two tools are intentionally omitted: `GMAIL_CREATE_PROMPT_POST` and `GMAIL_UPDATE_USER_ATTRIBUTES_VALUES`, which target the Sanity Content Agent rather than Gmail.
 
 ### Key conventions (the agent is told these in its prompt section)
 
@@ -169,7 +169,7 @@ config:
   triggerIntervalMinutes: 5
 ```
 
-While the plugin is mounted, each poll emits a Cordis event on the plugin's scope with the Composio trigger payload shapes (`sender`, `subject`, `message_id`, `thread_id`, `message_text`, `message_timestamp`, `attachment_list`, ...). The **first poll only seeds the seen-set**, so activation never replays the mailbox. Triggers run only while the session is live (agent-plane polling), like the harness schedule service.
+While the plugin is mounted, each poll emits a Cordis event on the plugin's scope with the trigger payload shapes (`sender`, `subject`, `message_id`, `thread_id`, `message_text`, `message_timestamp`, `attachment_list`, ...). The **first poll only seeds the seen-set**, so activation never replays the mailbox. Triggers run only while the session is live (agent-plane polling), like the harness schedule service.
 
 ```js
 ctx.on('gmail/message-received', (payload) => { /* ... */ })
@@ -237,7 +237,7 @@ The plugin uses only Node built-ins plus four optional `@deepseek-ai/*` peer dep
 node --check lib/index.js && for f in lib/*.js lib/tools/*.js; do node --check "$f"; done
 ```
 
-A registration smoke test (import → `Config({})` → apply on a stub `ctx.tools` → assert all 61 tools, no duplicates, no overlap with the Composio set) is run before each release.
+A registration smoke test (import → `Config({})` → apply on a stub `ctx.tools` → assert all 61 tools, no duplicates, no overlap with the expected tool set) is run before each release.
 
 ---
 
