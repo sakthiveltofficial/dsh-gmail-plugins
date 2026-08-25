@@ -1,7 +1,7 @@
 {
   "name": "@google-workspace/dsh-gmail",
   "version": "0.1.0",
-  "description": "Gmail plugin for the DeepSeek Harness: 61 model-facing tools and 2 polling triggers over the Gmail and People REST APIs, with OAuth2 token management.",
+  "description": "Gmail plugin for the DeepSeek Harness: 63 model-facing tools and 2 polling triggers over the Gmail and People REST APIs, with OAuth2 token management.",
   "type": "module",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
