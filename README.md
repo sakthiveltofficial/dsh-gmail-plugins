@@ -107,19 +107,30 @@ Gmail requires OAuth2 — there is no API-key path. Config carries only **env-va
 | `GMAIL_CLIENT_SECRET` | OAuth client secret (e.g. `GOCSPX-...`) — **required** |
 | `GMAIL_REFRESH_TOKEN` | long-lived refresh token — *optional*; when unset, run `gmail_authorize` and it is captured + stored automatically |
 
-### Step-by-step (Google Cloud)
+### Google Cloud setup (5 steps, ~5 minutes)
 
-1. Create a project at <https://console.cloud.google.com>.
+> **Copy-paste this redirect URL** — the plugin's OAuth callback listens on it:
+>
+> ```
+> http://127.0.0.1:8765/oauth2callback
+> ```
+> (configurable via the plugin's `redirectPort` setting; keep the two in lockstep)
+
+1. **Create a project** at <https://console.cloud.google.com> (or pick one).
 2. **Enable the APIs:** *APIs & Services → Library* → enable **Gmail API** and **People API** (People is only needed for the contacts tools).
-3. **Create an OAuth client:** *APIs & Services → Credentials → Create Credentials → OAuth client ID* → **Web application** (or Desktop). Add `https://developers.google.com/oauthplayground` as an authorized redirect URI (optional, for the manual path below). Loopback redirects (`http://127.0.0.1:<port>/oauth2callback`) used by the interactive sign-in are permitted by Google without registration.
-4. Export the two client values (or configure `ctx.credentials` sources for the same names):
-
+3. **Configure the OAuth consent screen:** *APIs & Services → OAuth consent screen* → User type **External** (or *Internal* for Workspace) → App name (e.g. `dsh-gmail`) + your support email → *Save*. Keep it in **Testing** (add your Google account as a test user) or *Publish* it; both work for your own account.
+4. **Create the OAuth client:** *APIs & Services → Credentials → Create Credentials → OAuth client ID* → **Web application** → under **Authorized redirect URIs** add exactly:
+   ```
+   http://127.0.0.1:8765/oauth2callback
+   ```
+   → *Create* → copy the **Client ID** and **Client secret**.
+5. **Export them** (or configure `ctx.credentials` sources for the same names):
    ```sh
    export GMAIL_CLIENT_ID='....apps.googleusercontent.com'
    export GMAIL_CLIENT_SECRET='GOCSPX-...'
    ```
 
-   The **refresh token does not need to be exported** — see the two options below.
+The **refresh token does not need to be exported** — see the two options below.
 
 ### Option A (recommended) — interactive sign-in from the harness
 
