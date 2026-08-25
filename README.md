@@ -1,5 +1,7 @@
 # dsh-gmail · Gmail Plugin for DeepSeek Harness
 
+![DSH-GMAIL — The Gmail Capability for DeepSeek Harness](docs/assets/dsh-gmail-banner.png)
+
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
 A complete, production-ready **Gmail plugin for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) (DSH)**. It gives the agent typed, policy-aware access to Gmail over the official Gmail and People REST APIs — **61 model-facing tools** (send, search, draft, label, filter, thread, settings, contacts) and **2 polling triggers** — with automatic OAuth2 token management.
@@ -224,7 +226,8 @@ lib/
 │   └── attachments.js  #    1 tool
 ├── triggers.js         # polling triggers
 ├── cordis.yml          # profile-patch row (host plane)
-└── examples/           # agent.cordis.yml preset row
+├── examples/           # agent.cordis.yml preset row
+└── docs/assets/        # banner image
 ```
 
 The plugin uses only Node built-ins plus four optional `@deepseek-ai/*` peer dependencies; no build step is required. Runtime requirements: Node.js ≥ 20 (global `fetch`), DeepSeek Harness.
