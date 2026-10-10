@@ -46,6 +46,26 @@ A complete, production-ready **Gmail plugin for [DeepSeek Harness](https://githu
 # A Google Cloud OAuth client (see "Configure credentials" below)
 ```
 
+### Compatibility
+
+The plugin's `peerDependencies` declare the DSH runtimes it is known to work
+with. Keep them as *ranges*: app-boot denies a plugin row whose pinned peers do
+not match the running `dsh` version, so exact pins turn every harness release
+into a hard failure (the row is silently skipped and the tools never register).
+
+| Peer | Supported |
+| --- | --- |
+| `@deepseek-ai/dsh-tools` | `^0.1.0-rc.6 \|\| ^0.2.0-rc.2` |
+| `@deepseek-ai/dsh-credentials` | `^0.1.0-rc.6 \|\| ^0.2.0-rc.2` |
+| `@deepseek-ai/cordis` | `^4.0.1` |
+| `@deepseek-ai/schemastery` | `^3.18.1` |
+
+Verified on `dsh 0.2.0-rc.2`: the plugin mounts with no version exemption, all
+`gmail_*` tools register, and a real read-only `gmail_list_labels` call returns
+the mailbox's labels. A future harness line (e.g. `0.2.1-alpha.*`) needs its own
+range term, because semver does not let a prerelease satisfy a range unless the
+range names a prerelease of the same `major.minor.patch`.
+
 ### 1. Install the package from this GitHub repository
 
 ```sh
