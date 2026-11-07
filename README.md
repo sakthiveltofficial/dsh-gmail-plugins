@@ -15,7 +15,7 @@ A complete, production-ready **Gmail plugin for [DeepSeek Harness](https://githu
 - **What:** a single Cordis plugin that extends DSH agents with 63 `gmail_*` tools + 2 polling triggers.
 - **Install:** `dsh plugin --profile web add github:sakthiveltofficial/dsh-gmail-plugins`, then add one row to your profile patch (or agent preset) — see [Install](#-install).
 - **Tools:** `gmail_send_email`, `gmail_fetch_emails`, `gmail_fetch_message_by_message_id`, `gmail_fetch_message_by_thread_id`, `gmail_list_threads`, `gmail_reply_to_thread`, `gmail_create_email_draft`, `gmail_send_draft`, `gmail_forward_message`, label/filter/trash/settings/contacts tools — the full list is in the [tool table](#-tools).
-- **Auth:** OAuth2 (`gmail.modify`, `gmail.settings.basic`, `gmail.compose`, `gmail.send`, `contacts.readonly` scopes). Credentials are **never stored in config** — env-var references resolved per operation via `ctx.credentials`. `gmail_authorize` runs the interactive Google sign-in and **captures + stores the refresh token automatically**; only `GMAIL_CLIENT_ID` / `GMAIL_CLIENT_SECRET` need to be set.
+- **Auth:** OAuth2 (`gmail.modify`, `gmail.settings.basic`, `gmail.compose`, `gmail.send`, `contacts.readonly` scopes). Scopes are **pinned to the config value** — `gmail_authorize` cannot request more than the operator configured (no scope escalation from the model). Config carries env-var *references* resolved per operation via `ctx.credentials` (literal values are supported but not recommended). `gmail_authorize` runs the interactive Google sign-in and **captures + stores the refresh token automatically**; only `GMAIL_CLIENT_ID` / `GMAIL_CLIENT_SECRET` need to be set.
 - **Triggers:** `gmail/message-received` (new mail) and `gmail/message-sent` (sent mail) — poll-based, seeded on first activation so the mailbox is never replayed.
 - **Runtime requirements:** DeepSeek Harness, Node.js ≥ 20 (global `fetch`), and a Google Cloud OAuth client with the Gmail (and People) API enabled.
 - **Safety:** permanent deletes (`gmail_delete_message`, `gmail_batch_delete_messages`, `gmail_delete_thread`, `gmail_delete_label`) are clearly labeled and require explicit user confirmation; the agent is prompted to prefer trash over permanent deletion unless the user asked for irreversible removal.
@@ -72,6 +72,12 @@ The plugin publishes no services — it only registers tools into the host `tool
         timeoutMs: 30000
         enableReceivedTrigger: false
         enableSentTrigger: false
+        # ── attachment policy (optional; defaults shown) ─────────────────
+        # attachmentRoot: ''            # ';'-separated dirs; empty = relative to working dir only
+        # maxAttachmentBytes: 20971520
+        # attachmentFetchTimeoutMs: 15000
+        # allowRemoteAttachments: true
+        # allowLocalAttachments: true
 ```
 
 **Option B — agent preset (tools only for agents on that preset).** Add the row to the preset's `agent.cordis.yml`:
@@ -223,8 +229,11 @@ ctx.on('gmail/message-sent', (payload) => { /* ... */ })
 
 ## 🔒 Security
 
-- **Secrets are never stored in config** — only env-var references (`GMAIL_CLIENT_ID` / `GMAIL_CLIENT_SECRET` / `GMAIL_REFRESH_TOKEN`), resolved per operation through `ctx.credentials` (process env → provider store → `.env`). Literal config values are supported for quick setups but are not recommended for production.
-- **Access tokens are cached in memory only**, never persisted, and are refreshed from the refresh token on demand.
+- **Secrets live outside config** — config carries env-var *references* (`GMAIL_CLIENT_ID` / `GMAIL_CLIENT_SECRET` / `GMAIL_REFRESH_TOKEN`) resolved per operation through `ctx.credentials` (process env → provider store → `.env`). Literal values are supported for quick setups but are not recommended for production. The refresh token captured by `gmail_authorize` is persisted in the harness credential store.
+- **Access tokens are cached in memory only**; the refresh token lives in the host credential store and fresh access tokens are minted on demand.
+- **No header injection**: the MIME builder rejects recipient/header values containing CR/LF or control characters, sanitizes `In-Reply-To`/`References` echoed from inbound mail, and validates attachment MIME types — covered by `test/mime.test.mjs`.
+- **Attachment path & SSRF policy**: local attachment files must be relative to the working directory (or inside the configured `attachmentRoot`); remote URLs must resolve to public addresses — private/loopback/link-local/metadata hosts are refused; every attachment is capped at `maxAttachmentBytes` with a download timeout.
+- **OAuth scope escalation is blocked**: `gmail_authorize` exposes no `scopes` argument; consent always requests exactly the configured `scopes`.
 - **Destructive tools are clearly labeled** in their descriptions (`permanent`, `no recovery possible`) and the agent is instructed to confirm with the user before permanent deletes and to prefer trash for reversible workflows.
 - **Forward/reply recipients are explicit** — forwarding preserves content, so the agent is instructed to verify recipients before forwarding to avoid unintended exposure.
 - Minimum privilege: grant only the scopes your workflows need (drop `gmail.settings.basic` or `contacts.readonly` if unused — an over-scoped client can trigger the "App is blocked" verification requirement).
@@ -264,7 +273,9 @@ The plugin uses only Node built-ins plus four optional `@deepseek-ai/*` peer dep
 ## 🧪 Development & verification
 
 ```sh
-node --check lib/index.js && for f in lib/*.js lib/tools/*.js; do node --check "$f"; done
+npm install   # dev dependencies (the @deepseek-ai peer packages) for the test suite
+npm run check # syntax-check every file
+npm test      # regression suite: MIME hardening, path/SSRF policy, tool surface
 ```
 
 A registration smoke test (import → `Config({})` → apply on a stub `ctx.tools` → assert all 63 tools, no duplicates, no overlap with the expected tool set) is run before each release.
