@@ -35,3 +35,9 @@
         triggerIntervalMinutes: 5
         receivedQuery: 'in:inbox newer_than:1d'
         sentQuery: 'in:sent newer_than:1d'
+        # ── attachment policy (optional; defaults shown) ──────────────────
+        # attachmentRoot: ''            # ';'-separated dirs; empty = relative under cwd only
+        # maxAttachmentBytes: 20971520
+        # attachmentFetchTimeoutMs: 15000
+        # allowRemoteAttachments: true
+        # allowLocalAttachments: true

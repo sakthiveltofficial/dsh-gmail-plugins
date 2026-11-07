@@ -1,0 +1,21 @@
+# dependencies
+node_modules/
+
+# build & test artifacts
+dist/
+coverage/
+*.tsbuildinfo
+
+# env / secrets — never commit real credentials
+.env
+.env.*
+!.env.example
+
+# logs
+*.log
+npm-debug.log*
+
+# editor / OS
+.DS_Store
+.idea/
+.vscode/
